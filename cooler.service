@@ -1,0 +1,12 @@
+[Unit]
+Description=RGB Cooling HAT
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python3.7 /home/pi/RGB_Cooling_HAT/cooler.py
+WorkingDirectory=/home/pi/RGB_Cooling_HAT
+User=pi
+
+[Install]
+WantedBy=multi-user.target
