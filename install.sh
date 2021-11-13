@@ -31,19 +31,23 @@ function yellow {
   echo -e "${yellow}${1}${end}"
 }
 
-function install_python_packages() {
-    sudo apt-get update && sudo apt-get install build-essential python3-pip python3-dev
+function install_required_packages() {
+    sudo apt-get update && sudo apt-get install build-essential python3-pip python3-dev git
     # upgrade and install required packages
     python3 -m pip install --upgrade pip setuptools wheel
     export CFLAGS=-fcommon
     sudo pip3 install Pillow psutil smbus rpi-gpio Adafruit-SSD1306
-    
+
     # add user to i2c group
     sudo usermod -aG i2c pi
+
+    echo "Downloading RGB Cooling HAT scripts..."
+    git clone http://github.com/C2dan88/RGB_Cooling_HAT.git
+    cd RGB_Cooling_HAT
 }
 
 
-# Patch Adafruit_GPIO for supplied python version
+# Patch Adafruit_GPIO for python version
 function apply_patch_for() {
     VERSION="python$1"
     PKG_PATH="/usr/local/lib/$VERSION/dist-packages/Adafruit_GPIO"
@@ -58,12 +62,6 @@ function apply_patch_for() {
     fi
 }
 
-function download_cooling_hat() {
-    wget https://github.com/YahboomTechnology/Raspberry-Pi-RGB-Cooling-HAT/raw/master/4.Python%20programming/RGB_Cooling_HAT.zip
-    unzip RGB_Cooling_HAT.zip
-    cd RGB_Cooling_HAT/
-}
-
 function install_cooler_service() {
     sudo cp cooler.service /etc/systemd/system/
     echo "Starting cooler..."
@@ -71,11 +69,8 @@ function install_cooler_service() {
     sudo systemctl enable cooler
 }
 
-echo "Installing required python packages..."
-install_python_packages
-
-echo "Downloading RGB Cooling HAT..."
-download_cooling_hat
+echo "Installing required packages..."
+install_required_packages
 
 echo "Patching Adafruit_GPIO to support raspberry Pi 4..."
 PYTHON_VERSION=$(python3 -V 2>&1 | grep -Po [0-9]\.[0-9+])
@@ -83,3 +78,5 @@ apply_patch_for $PYTHON_VERSION
 
 echo "Creating cooler service..."
 install_cooler_service
+
+green("... DONE ...")
